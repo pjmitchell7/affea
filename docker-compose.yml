@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+db:
+image: postgres:16-alpine
+environment:
+POSTGRES_DB: affea
+POSTGRES_USER: affea
+POSTGRES_PASSWORD: affea_password
+ports:
+- "5432:5432"
+volumes:
+- db_data:/var/lib/postgresql/data
+
+
+backend:
+build: ./backend
+command: bash -c "flask db-up && flask run --host=0.0.0.0 --port=8000"
+environment:
+FLASK_ENV: development
+DATABASE_URL: postgresql+psycopg2://affea:affea_password@db:5432/affea
+JWT_SECRET: change_me
+AWS_REGION: us-east-1
+AWS_S3_BUCKET: your-bucket
+AWS_ACCESS_KEY_ID: your-access-key
+AWS_SECRET_ACCESS_KEY: your-secret
+CORS_ORIGIN: http://localhost:3000
+depends_on:
+- db
+ports:
+- "8000:8000"
+volumes:
+- ./backend:/app
+
+
+frontend:
+build: ./frontend
+command: npm run dev
+environment:
+NEXT_PUBLIC_API_BASE: http://localhost:8000
+ports:
+- "3000:3000"
+volumes:
+- ./frontend:/usr/src/app
+- /usr/src/app/node_modules
+
+
+volumes:
+db_data:
